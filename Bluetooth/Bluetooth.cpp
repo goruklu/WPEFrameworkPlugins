@@ -85,7 +85,7 @@ namespace Plugin {
         if ((request.Verb == Web::Request::HTTP_PUT) || (request.Verb == Web::Request::HTTP_POST)) {
             if ((index.IsValid() == true) && (index.Next() && index.IsValid())) {
                 if ((index.Remainder() == _T("Pair")) || (index.Remainder() == _T("Connect")) || (index.Remainder() == _T("Disconnect")))
-                   request.Body(jsonResponseFactoryBTDeviceInfo.Element());
+                    request.Body(jsonResponseFactoryBTDeviceInfo.Element());
             }
         }
     }
@@ -126,41 +126,39 @@ namespace Plugin {
         result->ErrorCode = Web::STATUS_BAD_REQUEST;
         result->Message = _T("Unsupported GET request.");
 
-        if (index.IsValid() == true) {
-            if (index.Next() && index.IsValid()) {
+        if (index.Next()) {
+            TRACE(Trace::Information, (string(__FUNCTION__)));
+            if (index.Remainder() == _T("DiscoveredDevices")) {
+
                 TRACE(Trace::Information, (string(__FUNCTION__)));
-                if (index.Remainder() == _T("DiscoveredDevices")) {
+                Core::ProxyType<Web::JSONBodyType<BTStatus> > response(jsonResponseFactoryBTStatus.Element());
 
-                    TRACE(Trace::Information, (string(__FUNCTION__)));
-                    Core::ProxyType<Web::JSONBodyType<BTStatus> > response(jsonResponseFactoryBTStatus.Element());
+                std::string discoveredDevices = _bluetooth->DiscoveredDevices();
+                if (discoveredDevices.size() > 0) {
+                    response->DeviceList.FromString(discoveredDevices);
 
-                    std::string discoveredDevices = _bluetooth->DiscoveredDevices();
-                    if (discoveredDevices.size() > 0) {
-                        response->DeviceList.FromString(discoveredDevices);
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Discovered devices.");
+                    result->Body(response);
+                } else {
+                    result->ErrorCode = Web::STATUS_NO_CONTENT;
+                    result->Message = _T("Unable to display Discovered devices.");
+                }
+            } else if (index.Remainder() == _T("PairedDevices")) {
 
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Discovered devices.");
-                        result->Body(response);
-                    } else {
-                        result->ErrorCode = Web::STATUS_NO_CONTENT;
-                        result->Message = _T("Unable to display Discovered devices.");
-                    }
-                } else if (index.Remainder() == _T("PairedDevices")) {
+                TRACE(Trace::Information, (string(__FUNCTION__)));
+                Core::ProxyType<Web::JSONBodyType<BTStatus> > response(jsonResponseFactoryBTStatus.Element());
 
-                    TRACE(Trace::Information, (string(__FUNCTION__)));
-                    Core::ProxyType<Web::JSONBodyType<BTStatus> > response(jsonResponseFactoryBTStatus.Element());
+                std::string pairedDevices = _bluetooth->PairedDevices();
+                if (pairedDevices.size() > 0) {
+                    response->DeviceList.FromString(pairedDevices);
 
-                    std::string pairedDevices = _bluetooth->PairedDevices();
-                    if (pairedDevices.size() > 0) {
-                        response->DeviceList.FromString(pairedDevices);
-
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Paired devices.");
-                        result->Body(response);
-                    } else {
-                        result->ErrorCode = Web::STATUS_NO_CONTENT;
-                        result->Message = _T("Unable to display Paired devices.");
-                    }
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Paired devices.");
+                    result->Body(response);
+                } else {
+                    result->ErrorCode = Web::STATUS_NO_CONTENT;
+                    result->Message = _T("Unable to display Paired devices.");
                 }
             }
         } else {
@@ -186,53 +184,51 @@ namespace Plugin {
         result->ErrorCode = Web::STATUS_BAD_REQUEST;
         result->Message = _T("Unsupported PUT request.");
 
-        if (index.IsValid() == true) {
-            if (index.Next()) {
-                TRACE(Trace::Information, (string(__FUNCTION__)));
+        if (index.Next()) {
+            TRACE(Trace::Information, (string(__FUNCTION__)));
 
-                if (index.Remainder() == _T("Scan")) {
-                    if (_bluetooth->Scan()) {
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Scan started.");
-                    } else {
-                        result->ErrorCode = Web::STATUS_BAD_REQUEST;
-                        result->Message = _T("Unable to start Scan.");
-                    }
-                } else if (index.Remainder() == _T("StopScan")) {
-                    if (_bluetooth->StopScan()) {
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Scan stopped.");
-                    } else {
-                        result->ErrorCode = Web::STATUS_BAD_REQUEST;
-                        result->Message = _T("Unable to stop Scan.");
-                    }
-                } else if ((index.Remainder() == _T("Pair")) && (request.HasBody())) {
-                    Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
-                    if (_bluetooth->Pair(deviceInfo->Address)) {
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Paired device.");
-                    } else {
-                        result->ErrorCode = Web::STATUS_BAD_REQUEST;
-                        result->Message = _T("Unable to Pair device.");
-                    }
-                } else if ((index.Remainder() == _T("Connect")) && (request.HasBody())) {
-                    Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
-                    if (_bluetooth->Connect(deviceInfo->Address)) {
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Connected device.");
-                    } else {
-                        result->ErrorCode = Web::STATUS_BAD_REQUEST;
-                        result->Message = _T("Unable to Connect device.");
-                    }
-                } else if ((index.Remainder() == _T("Disconnect")) && (request.HasBody())) {
-                    Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
-                    if (_bluetooth->Disconnect(deviceInfo->Address)) {
-                        result->ErrorCode = Web::STATUS_OK;
-                        result->Message = _T("Disconnected device.");
-                    } else {
-                        result->ErrorCode = Web::STATUS_BAD_REQUEST;
-                        result->Message = _T("Unable to Disconnect device.");
-                    }
+            if (index.Remainder() == _T("Scan")) {
+                if (_bluetooth->Scan()) {
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Scan started.");
+                } else {
+                    result->ErrorCode = Web::STATUS_BAD_REQUEST;
+                    result->Message = _T("Unable to start Scan.");
+                }
+            } else if (index.Remainder() == _T("StopScan")) {
+                if (_bluetooth->StopScan()) {
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Scan stopped.");
+                } else {
+                    result->ErrorCode = Web::STATUS_BAD_REQUEST;
+                    result->Message = _T("Unable to stop Scan.");
+                }
+            } else if ((index.Remainder() == _T("Pair")) && (request.HasBody())) {
+                Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
+                if (_bluetooth->Pair(deviceInfo->Address)) {
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Paired device.");
+                } else {
+                    result->ErrorCode = Web::STATUS_BAD_REQUEST;
+                    result->Message = _T("Unable to Pair device.");
+                }
+            } else if ((index.Remainder() == _T("Connect")) && (request.HasBody())) {
+                Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
+                if (_bluetooth->Connect(deviceInfo->Address)) {
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Connected device.");
+                } else {
+                    result->ErrorCode = Web::STATUS_BAD_REQUEST;
+                    result->Message = _T("Unable to Connect device.");
+                }
+            } else if ((index.Remainder() == _T("Disconnect")) && (request.HasBody())) {
+                Core::ProxyType<const BTDeviceInfo> deviceInfo (request.Body<const BTDeviceInfo>());
+                if (_bluetooth->Disconnect(deviceInfo->Address)) {
+                    result->ErrorCode = Web::STATUS_OK;
+                    result->Message = _T("Disconnected device.");
+                } else {
+                    result->ErrorCode = Web::STATUS_BAD_REQUEST;
+                    result->Message = _T("Unable to Disconnect device.");
                 }
             }
         }
