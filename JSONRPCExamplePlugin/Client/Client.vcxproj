@@ -22,7 +22,7 @@
     <ProjectGuid>{D13126BD-114F-4983-8F9C-F2CDADE5363A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>JSONRPCClient</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectName>JSONRPCClient</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
